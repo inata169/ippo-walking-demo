@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff"><meta name="description" content="身体の状態や杖を変え、歩き方をゆっくり観察できる、片手で操作する3Dデモです。">
+  <title>一歩ずつ｜歩きを見つめる3Dデモ</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"./assets/three.module.js"}}</script>
+  <link rel="stylesheet" href="./license.css">
+</head>
+<body>
+  <header class="header"><div class="brand"><h1>一歩ずつ</h1><p>歩きを見つめる3Dデモ</p></div><button id="hand-layout" class="quiet" aria-pressed="false">操作を左側へ</button></header>
+  <main>
+    <div class="workspace" id="workspace">
+      <section class="walk-area" aria-label="3D歩行の観察">
+        <div class="stage" id="stage">
+          <div class="stage-top"><span id="ground-name">平らな道</span><span><strong id="distance">0.0</strong><span class="distance-unit"> / 20 m</span></span></div>
+          <canvas id="world" aria-label="片麻痺の歩行を簡略化した3D人物。ドラッグで視点を変更できます。" tabindex="0"></canvas>
+          <div id="load-message" class="load-message" role="status">3Dの準備をしています…</div>
+          <div class="stage-bottom"><span class="side-key"><i></i><span id="side-name">右側</span>をオレンジで表示</span><span class="drag-help">ドラッグでぐるっと見る</span></div>
+          <div id="finish" class="finish" hidden><strong>20 m、到着しました。</strong><p>今の歩き方を、別の条件と見比べてみましょう。</p><button id="finish-reset" class="primary">もう一度歩く</button></div>
+        </div>
+        <div class="transport">
+          <button id="play" class="primary play" disabled aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4 21 12 7 20Z" fill="currentColor"/></svg><span>歩く</span></button>
+          <button id="reset" class="outline">はじめから</button>
+          <button id="step" class="quiet">一歩だけ</button>
+          <label class="check compact"><input type="checkbox" id="slow"><span>スロー再生</span></label>
+        </div>
+        <div class="view-controls">
+          <fieldset><legend>カメラの向き</legend><div class="segmented camera"><button data-view="angle" aria-pressed="true">斜め</button><button data-view="side" aria-pressed="false">横</button><button data-view="front" aria-pressed="false">前</button><button data-view="back" aria-pressed="false">後ろ</button><button data-view="feet" aria-pressed="false">足元</button></div></fieldset>
+          <div class="zoom"><span>ズーム</span><div><button id="zoom-out" class="square" aria-label="縮小"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button><button id="zoom-in" class="square" aria-label="拡大"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button></div></div>
+        </div>
+        <div class="compare"><div><strong id="compare-label">同じ道で、見比べる</strong><span id="compare-description">条件を残してから、杖などを変えてみましょう。</span></div><button id="save-a" class="quiet">今の条件をAに保存</button><button id="toggle-a" class="outline" disabled>Aと見比べる</button></div>
+      </section>
+      <aside class="settings" aria-label="歩き方の設定">
+        <h2>歩き方を変える</h2>
+        <fieldset class="preset"><legend class="sr-only">架空の身体設定</legend><div class="segmented"><button data-preset="light" aria-pressed="false">軽め</button><button data-preset="medium" aria-pressed="true">中くらい</button><button data-preset="heavy" aria-pressed="false">重め</button></div><p class="meta" id="preset-note">架空の設定です。ご自身の重症度とは対応しません。</p></fieldset>
+        <fieldset class="inline-control"><legend>動かしにくい側</legend><div class="segmented small"><button data-side="right" aria-pressed="true">右</button><button data-side="left" aria-pressed="false">左</button></div></fieldset>
+        <div class="slider-control"><label for="power">脚を動かす力 <output id="power-value" for="power">55</output></label><input id="power" type="range" min="20" max="95" step="5" value="55"><div class="range-scale"><span>小さい</span><span>大きい</span></div></div>
+        <div class="slider-control"><label for="stiffness">こわばり <output id="stiffness-value" for="stiffness">45</output></label><input id="stiffness" type="range" min="0" max="90" step="5" value="45"><div class="range-scale"><span>少ない</span><span>多い</span></div></div>
+        <div class="slider-control"><label for="sensation">足裏の感じやすさ <output id="sensation-value" for="sensation">60</output></label><input id="sensation" type="range" min="10" max="100" step="5" value="60"><div class="range-scale"><span>感じにくい</span><span>感じやすい</span></div></div>
+        <label class="toggle-row" for="cane"><span>杖を使う</span><input id="cane" type="checkbox" checked role="switch"><span class="switch-art" aria-hidden="true"></span></label>
+        <fieldset class="inline-control"><legend>歩く速さ</legend><div class="segmented small"><button data-speed="slow" aria-pressed="false">ゆっくり</button><button data-speed="normal" aria-pressed="true">通常</button></div></fieldset>
+        <fieldset class="inline-control"><legend>地面</legend><div class="segmented small"><button data-ground="flat" aria-pressed="true">平地</button><button data-ground="slope" aria-pressed="false">ゆるい坂</button></div></fieldset>
+        <div class="foot-panel"><div class="foot-heading"><h3>足のつき方</h3><span id="cane-status">杖：接地</span></div><div class="feet"><div><svg id="foot-left" viewBox="0 0 52 100" role="img" aria-label="左足の接地状態"><path class="foot-base" d="M27 4C9 4 7 27 12 44c5 14 3 23 5 38 2 20 21 18 24 2 3-14-3-23-2-37 2-17 6-42-12-43Z"/><path class="forefoot" d="M27 7C12 7 10 25 14 40c8 5 16 5 23 0 3-17 4-33-10-33Z"/><ellipse class="heel" cx="28" cy="80" rx="10" ry="13"/></svg><strong>左</strong><span id="contact-left">接地</span></div><div><svg id="foot-right" viewBox="0 0 52 100" role="img" aria-label="右足の接地状態"><path class="foot-base" d="M25 4C43 4 45 27 40 44c-5 14-3 23-5 38-2 20-21 18-24 2-3-14 3-23 2-37C11 30 7 5 25 4Z"/><path class="forefoot" d="M25 7C40 7 42 25 38 40c-8 5-16 5-23 0C12 23 8 7 25 7Z"/><ellipse class="heel" cx="24" cy="80" rx="10" ry="13"/></svg><strong>右</strong><span id="contact-right">接地</span></div></div><label class="check"><input id="sense-view" type="checkbox"><span>感じ取り方のイメージを見る</span></label><p class="meta" id="sense-caption">色の濃い部分が接地の目安です。足底圧の実測ではありません。</p></div>
+      </aside>
+    </div>
+    <section class="insight" aria-label="観察のヒント"><div class="insight-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M9 21h6M8 14a6 6 0 1 1 8 0c-1 1-1 2-1 2H9s0-1-1-2Z"/></svg><h2>ここを見てみましょう</h2></div><p id="hint">つま先の高さと、杖をつくタイミングを見比べてみましょう。</p></section>
+    <footer><p>歩行の仕組みを簡略化したデモです。実際の練習方法や補助具の調整は、担当の専門職と相談してください。</p><details><summary>このデモの仕組みと使い方</summary><div class="explanation"><p>「歩く」を押すと20 mの道を進みます。ドラッグやカメラのボタンで、どの方向からも観察できます。設定を変えるといったん停止し、同じ出発点に戻ります。</p><p>動かす力は脚の振り出しや歩幅、こわばりは膝の動きや脚の回し方に反映します。足裏の感じやすさは接地情報の表示と足の置き場の小さな変化に反映し、筋力や地面の摩擦は変えません。杖をつく動作は自動です。</p><p>数値はゲーム内の調整値です。臨床の検査値や転倒確率ではありません。歩行できる範囲の架空の人物を扱い、脳の病変から歩容・回復を予測する機能、個別の歩行指導、医学的な妥当性検証は含みません。実際の歩き方には個人差があります。</p><p>気になったことは「つま先が引っかかるのはどの場面か」「杖と足の順序は自分に合っているか」のように、担当の理学療法士・医師へ相談するきっかけにしてください。</p><p>参考：<a href="https://www.stroke.org/en/about-stroke/effects-of-stroke/physical-effects/balance" target="_blank" rel="noopener noreferrer">American Stroke Association：バランス</a> · <a href="https://pubmed.ncbi.nlm.nih.gov/27077993/" target="_blank" rel="noopener noreferrer">足底感覚とバランスの研究</a></p></div></details></footer>
+    <div class="license-notice" aria-label="ライセンス"><strong>オープンソース</strong><span>© 2026 inata169</span><a href="./LICENSE" target="_blank" rel="license noopener">MIT License</a><span>自由に利用・改変・再配布できます。</span></div>
+  </main>
+  <div id="announcement" class="sr-only" role="status" aria-live="polite"></div>
+  <noscript><p>このデモを動かすにはJavaScriptを有効にしてください。</p></noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
