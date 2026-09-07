@@ -24,4 +24,4 @@
 
 専門職からの意見を受け、代表的な歩行の特徴と左右の支え方を見比べられるレビュー版を `review/v0.2/` に追加しています。公開版とは分けており、確認後に公開へ反映します。
 
-手元で確認する場合は、Python 3で `python start-review.py` を実行してください。構成と追加方法は [`review/v0.2/DEVELOPMENT.md`](./review/v0.2/DEVELOPMENT.md) に記載しています。
+手元で確認する場合は、Windowsでは `start-review.bat` をダブルクリックします。その他の環境では、Python 3で `python start-review.py` を実行してください。構成と追加方法は [`review/v0.2/DEVELOPMENT.md`](./review/v0.2/DEVELOPMENT.md) に記載しています。

@@ -2,7 +2,7 @@
 
 ## 起動
 
-リポジトリの最上位で次を実行します。
+Windowsでは、リポジトリ最上位の `start-review.bat` をダブルクリックします。その他の環境では次を実行します。
 
 ```text
 python start-review.py
