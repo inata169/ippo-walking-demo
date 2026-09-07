@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>一歩ずつ v0.2｜レビュー版</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"../../assets/three.module.js"}}</script>
+</head>
+<body>
+<header><div><h1>一歩ずつ <small>v0.2 レビュー版</small></h1><p>代表的な歩行パターンを見比べる3Dデモ</p></div><a href="../../index.html">公開中の旧版へ</a></header>
+<main>
+  <p class="notice">専門職確認前の説明用モデルです。ご自身の歩き方や原因を判定するものではありません。</p>
+  <div class="workspace">
+    <section aria-label="歩行の観察">
+      <div class="stage"><canvas id="world" tabindex="0" aria-label="3D歩行。ドラッグで視点変更"></canvas><div class="stage-label"><span id="side-label"></span><span id="distance">0.0 m</span></div><p id="loading" role="status">3Dを準備しています…</p></div>
+      <div class="row"><button id="play" class="primary" disabled>歩く</button><button id="step" disabled>一歩だけ</button><button id="reset">はじめから</button><label><input id="slow" type="checkbox">スロー再生</label></div>
+      <div class="row" id="views" aria-label="カメラの向き"><button data-view="angle" aria-pressed="true">斜め</button><button data-view="side" aria-pressed="false">横</button><button data-view="front" aria-pressed="false">前</button><button data-view="back" aria-pressed="false">後ろ</button><button data-view="feet" aria-pressed="false">足元</button><button id="zoom-in" aria-label="拡大">＋</button><button id="zoom-out" aria-label="縮小">−</button></div>
+      <section class="panel"><label for="phase">歩行周期 <output id="phase-value">0%</output></label><div class="slider"><button id="phase-minus" aria-label="周期を5%戻す">−</button><input id="phase" type="range" min="0" max="100" step="1" value="0"><button id="phase-plus" aria-label="周期を5%進める">＋</button></div><p class="meta">動かしにくい側の接地開始から次の接地開始まで。操作すると停止します。</p><strong id="phase-label"></strong></section>
+      <section class="panel"><label><input type="checkbox" id="show-support" checked>支え方のイメージを表示</label><div id="support"><div class="support-row"><span id="left-label">左足</span><div class="track"><div id="left-bar" class="fill"></div></div><span id="left-contact"></span></div><div class="support-row"><span id="right-label">右足</span><div class="track"><div id="right-bar" class="fill"></div></div><span id="right-contact"></span></div><p id="cane-contact"></p><p class="meta">左右の足同士の相対的な支え方です。実測の荷重・足底圧ではありません。杖への荷重は未計算です。</p></div></section>
+    </section>
+    <aside class="panel" aria-label="歩行の特徴">
+      <h2>気になる動きから選ぶ</h2><p class="meta">単独の特徴を強調した試作です。該当しない・分からない場合もあります。</p>
+      <div id="features" class="features"></div>
+      <label for="level">強調する程度 <output id="level-value">中</output></label><div class="slider"><button id="level-minus" aria-label="強調を小さく">−</button><input id="level" type="range" min="0" max="3" step="1" value="2"><button id="level-plus" aria-label="強調を大きく">＋</button></div><p class="meta">重症度や臨床の検査値ではありません。</p>
+      <fieldset><legend>動かしにくい側</legend><div class="row"><button data-side="right" aria-pressed="true">右</button><button data-side="left" aria-pressed="false">左</button></div></fieldset>
+      <label class="cane"><input id="cane" type="checkbox" checked>杖を使う</label>
+      <div id="trunk-options" hidden><label for="direction">傾く方向</label><select id="direction"><option value="affected">動かしにくい側</option><option value="opposite">反対側</option></select><label for="timing">傾く時期</label><select id="timing"><option value="stance">足で支える時</option><option value="swing">足を振り出す時</option></select></div>
+      <section class="hint"><h3>ここを見てみましょう</h3><p id="hint"></p><button id="recommended-view">見やすい向きへ</button></section>
+      <section class="comparison"><h3>同じ瞬間で見比べる</h3><div class="row"><button id="save-a">今の条件をAに保存</button><button id="toggle-a" disabled>Aと見比べる</button></div><p id="compare-label" role="status">条件Aは未保存です。</p><p class="meta">画面を閉じると保存は消えます。異なる支持時間の比較では局面名も確認してください。</p></section>
+    </aside>
+  </div>
+  <footer><p id="status" role="status" aria-live="polite"></p><p>実際の練習方法や補助具の調整は、担当の専門職と相談してください。</p><details><summary>モデルの限界・開発について</summary><p>関節と支え方は説明用の仮設定です。足圧中心、身体重心、床反力、筋活動、回復・転倒リスクは計算していません。組み合わせ例・坂道は専門職確認後の拡張対象です。</p><p>追加のデータ送信や端末権限の要求はありません。配信基盤には通常のアクセスログが残る場合があります。</p><a href="./DEVELOPMENT.md">機能追加・修正の手順</a></details><p>© 2026 inata169 · <a href="../../LICENSE">MIT License</a> · <a href="../../assets/THREE-LICENSE.txt">Three.js License</a></p></footer>
+</main><noscript>JavaScriptを有効にしてください。</noscript><script type="module" src="./app.js"></script>
+</body></html>

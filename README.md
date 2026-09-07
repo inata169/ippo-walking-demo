@@ -19,3 +19,9 @@
 本プロジェクト固有のコードは [MIT License](./LICENSE) で公開します。利用・改変・再配布が可能ですが、著作権表示とライセンス文を残してください。
 
 同梱しているThree.js関連ファイルにもMIT Licenseが適用されます。詳細は [`assets/THREE-LICENSE.txt`](./assets/THREE-LICENSE.txt) を参照してください。
+
+## v0.2 レビュー版
+
+専門職からの意見を受け、代表的な歩行の特徴と左右の支え方を見比べられるレビュー版を `review/v0.2/` に追加しています。公開版とは分けており、確認後に公開へ反映します。
+
+手元で確認する場合は、Python 3で `python start-review.py` を実行してください。構成と追加方法は [`review/v0.2/DEVELOPMENT.md`](./review/v0.2/DEVELOPMENT.md) に記載しています。
