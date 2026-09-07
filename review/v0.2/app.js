@@ -1,6 +1,7 @@
 import {FEATURES,LEVELS,PARAMETERS,featureOf} from './patterns.js';
 import {samplePose} from './gait.js';
 import {createState,changeConfig,saveA,toggleA} from './state.js';
+window.__ippoStarted=true;
 const $=id=>document.getElementById(id),state=createState();
 let scene,ready=false,frameId=null,lastTime=0,lastUI=0;
 for(const f of FEATURES){const b=document.createElement('button');b.textContent=f.label;b.dataset.feature=f.id;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>change({feature:f.id}));$('features').append(b);}
@@ -52,4 +53,4 @@ function frame(t){
 document.addEventListener('visibilitychange',()=>{state.running=false;syncPlayback();if(document.hidden){cancelAnimationFrame(frameId);frameId=null;}else{lastTime=0;if(ready&&frameId===null)frameId=requestAnimationFrame(frame);}});
 sync();
 try{const {createScene}=await import('./scene.js');scene=createScene($('world'),state.config);ready=true;$('loading').hidden=true;$('play').disabled=false;$('step').disabled=false;scene.controls.addEventListener('start',()=>document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed','false')));draw();frameId=requestAnimationFrame(frame);}
-catch(error){$('loading').textContent='3Dを開始できませんでした。再読み込み、またはWebGL 2対応のブラウザでお試しください。';console.error(error);}
+catch(error){$('loading').textContent='3Dを開始できませんでした。EdgeまたはChromeで再読み込みしてください。';$('loading').classList.add('error');console.error(error);}

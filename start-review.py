@@ -9,7 +9,26 @@ import webbrowser
 
 ROOT = Path(__file__).resolve().parent
 os.chdir(ROOT)
-server = ThreadingHTTPServer(("127.0.0.1", 0), SimpleHTTPRequestHandler)
+
+
+class DemoHandler(SimpleHTTPRequestHandler):
+    """Serve ES modules with stable MIME types on Windows."""
+
+    extensions_map = {
+        **SimpleHTTPRequestHandler.extensions_map,
+        ".html": "text/html; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".js": "text/javascript; charset=utf-8",
+        ".mjs": "text/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+    }
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
+
+server = ThreadingHTTPServer(("127.0.0.1", 0), DemoHandler)
 url = f"http://127.0.0.1:{server.server_port}/review/v0.2/"
 
 

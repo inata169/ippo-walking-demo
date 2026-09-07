@@ -31,5 +31,16 @@
     </aside>
   </div>
   <footer><p id="status" role="status" aria-live="polite"></p><p>実際の練習方法や補助具の調整は、担当の専門職と相談してください。</p><details><summary>モデルの限界・開発について</summary><p>関節と支え方は説明用の仮設定です。足圧中心、身体重心、床反力、筋活動、回復・転倒リスクは計算していません。組み合わせ例・坂道は専門職確認後の拡張対象です。</p><p>追加のデータ送信や端末権限の要求はありません。配信基盤には通常のアクセスログが残る場合があります。</p><a href="./DEVELOPMENT.md">機能追加・修正の手順</a></details><p>© 2026 inata169 · <a href="../../LICENSE">MIT License</a> · <a href="../../assets/THREE-LICENSE.txt">Three.js License</a></p></footer>
-</main><noscript>JavaScriptを有効にしてください。</noscript><script type="module" src="./app.js"></script>
+</main><noscript>JavaScriptを有効にしてください。</noscript>
+<script>
+  window.__ippoStarted = false;
+  window.setTimeout(function () {
+    if (!window.__ippoStarted) {
+      var loading = document.getElementById('loading');
+      loading.textContent = '3Dを読み込めませんでした。最新版を展開し直し、EdgeまたはChromeでお試しください。';
+      loading.classList.add('error');
+    }
+  }, 5000);
+</script>
+<script type="module" src="./app.js"></script>
 </body></html>
