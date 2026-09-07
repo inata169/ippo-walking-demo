@@ -30,6 +30,13 @@
 
 同梱しているThree.js関連ファイルにもMIT Licenseが適用されます。詳細は [`assets/THREE-LICENSE.txt`](./assets/THREE-LICENSE.txt) を参照してください。
 
+## 文書
+
+- [プロジェクトの目的と現在地](./docs/PROJECT_STATUS.md)
+- [リハビリ専門職向け確認ガイド](./docs/PROFESSIONAL_REVIEW.md)
+- [変更履歴](./CHANGELOG.md)
+- [Ver.0.3の開発・拡張方法](./review/v0.3/DEVELOPMENT.md)
+
 ## 旧レビュー版
 
 Ver.0.2は `review/v0.2/` に残しています。
