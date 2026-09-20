@@ -3,7 +3,7 @@
   const loading=document.getElementById('loading');
   const timer=setTimeout(()=>{if(!loading.hidden)loading.textContent='読み込みに時間がかかっています。起動用の黒い画面を閉じていないか確認してください。';},10000);
   try {
-    const app=await import('./app.js');
+    const app=await import('./app.js?v=0.4.0-phase1');
     await app.start();
     loading.hidden=true;
   } catch(error) {
