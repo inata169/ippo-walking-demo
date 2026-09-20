@@ -11,6 +11,10 @@ assert.ok(OBSERVATION_PHASES.every((p,i,a)=>p.position>=0&&p.position<1&&(!i||p.
 for(const p of OBSERVATION_PHASES){
   assert.equal(phaseById(p.id),p);
   assert.ok(Math.abs(cycleAtPhase(2.47,p.id)-(2+p.position))<1e-10);
+  for(const side of ['left','right']){
+    const pose=samplePose(normalize({...DEFAULT,side}),p.position);
+    assert.ok(Math.abs(pose[side].phase-p.position)<1e-10);
+  }
 }
 assert.throws(()=>cycleAtPhase(0,'unknown'));
 
@@ -22,6 +26,7 @@ saveA(s);changeDetail(s,'hipHiking',50);
 assert.equal(s.a.detail.hipHiking,0);
 toggleA(s);assert.equal(s.config.detail.hipHiking,0);
 toggleA(s);assert.equal(s.config.detail.hipHiking,50);assert.equal(s.cycles,0.37);
+s.observationPhase='midSwing';toggleA(s);assert.equal(s.observationPhase,'midSwing');toggleA(s);
 const decoded=decodeSettings(encodeSettings(s.config,s.cycles));
 assert.deepEqual(decoded.config,s.config);assert.ok(Math.abs(decoded.cycles-s.cycles)<1e-10);
 assert.throws(()=>decodeSettings('not json'));

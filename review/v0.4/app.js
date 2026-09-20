@@ -65,7 +65,7 @@ function view(name){
 function buildControls(){
   for(const phase of OBSERVATION_PHASES){
     const button=document.createElement('button');button.textContent=phase.label;
-    button.dataset.observationPhase=phase.id;button.setAttribute('aria-pressed','false');
+    button.dataset.observationPhase=phase.id;button.setAttribute('aria-pressed','false');button.disabled=true;
     button.onclick=()=>selectObservationPhase(phase.id);$('observation-phases').append(button);
   }
   for(const f of FEATURES){
@@ -155,6 +155,7 @@ export async function start(){
   buildControls();bind();sync();
   const {createScene}=await import('./scene.js');scene=createScene($('world'),state.config);draw();
   ready=true;$('play').disabled=false;$('step').disabled=false;
+  document.querySelectorAll('[data-observation-phase]').forEach(button=>{button.disabled=false;});
   scene.controls.addEventListener('start',()=>document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed','false')));
   frameId=requestAnimationFrame(frame);
 }
