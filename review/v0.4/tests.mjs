@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {DEFAULT,DETAIL_FIELDS,normalize,periodFor,strideFor,PARAMETERS as P} from './patterns.js';
 import {createState,enterDetail,changeDetail,saveA,toggleA} from './state.js';
-import {samplePose} from './gait.js';
+import {samplePose,caneElbowBetween} from './gait.js';
 import {encodeSettings,decodeSettings} from './settings.js';
 import {OBSERVATION_PHASES,cycleAtPhase,phaseById} from './phases.js';
 
@@ -17,6 +17,19 @@ for(const p of OBSERVATION_PHASES){
   }
 }
 assert.throws(()=>cycleAtPhase(0,'unknown'));
+
+for(const affectedSide of ['left','right']){
+  const pose=samplePose(normalize({...DEFAULT,side:affectedSide,cane:true}),0.31);
+  assert.ok(pose.right.x<0&&pose.left.x>0,'anatomical right must be -X and left +X');
+  assert.ok(pose.right.hip[0]<pose.left.hip[0]);
+  assert.equal(pose.cane.side,affectedSide==='right'?'left':'right');
+  assert.equal(Math.sign(pose.cane.x),affectedSide==='right'?1:-1);
+}
+const shoulder=[-0.205,1.255,0],caneHand=[-0.38,0.77,0.08];
+const caneElbow=caneElbowBetween(shoulder,caneHand);
+assert.ok(caneElbow[2]<(shoulder[2]+caneHand[2])/2,'cane elbow must flex posteriorly');
+assert.ok(Math.abs(Math.hypot(...caneElbow.map((v,i)=>v-shoulder[i]))-0.29)<1e-10);
+assert.ok(Math.abs(Math.hypot(...caneElbow.map((v,i)=>v-caneHand[i]))-0.28)<1e-10);
 
 const s=createState();s.cycles=0.37;enterDetail(s);
 assert.equal(s.config.mode,'detail');
@@ -52,4 +65,4 @@ for(const config of configurations)for(let i=0;i<16;i++){
 }
 const faster=normalize({...s.config,detail:{...s.config.detail,cadence:80}});
 assert.equal(strideFor(faster),strideFor(s.config));assert.ok(periodFor(faster)<periodFor(s.config));
-console.log('PASS: preset -> detail, A/B independence, JSON round-trip/rejection, independent cadence, '+poses+' representative poses.');
+console.log('PASS: preset -> detail, A/B independence, JSON round-trip/rejection, independent cadence, anatomical laterality, cane-elbow flexion, '+poses+' representative poses.');

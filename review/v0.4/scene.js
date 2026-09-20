@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from '../../assets/OrbitControls.js';
-import {samplePose,groundAt,kneeBetween} from './gait.js';
+import {samplePose,groundAt,caneElbowBetween} from './gait.js?v=0.4.0-phase1-fix1';
 const V=(x,y,z)=>new THREE.Vector3(x,y,z),up=V(0,1,0);
 const material=(color,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness});
 export function buildAvatar(scene){
@@ -33,15 +33,14 @@ export function buildAvatar(scene){
    nose.position.copy(head.position).add(V(0,-.01,.103));
    orient(neck,h.clone().add(V(lean*1.5,.445,0)),h.clone().add(V(lean*1.8,.51,0)));
    for(const side of ['right','left']){
-     const s=p[side],sign=side==='right'?1:-1,leg=legs[side],a=V(s.x,s.y,s.z),hip=V(...s.hip),k=V(...s.knee);
+     const s=p[side],sign=side==='right'?-1:1,leg=legs[side],a=V(s.x,s.y,s.z),hip=V(...s.hip),k=V(...s.knee);
      orient(leg.thigh,hip,k);orient(leg.shin,k,a);leg.knee.position.copy(k);leg.ankle.position.copy(a);leg.foot.position.copy(a);leg.foot.rotation.set(s.pitch,0,s.roll);
      leg.shin.material=s.affected?orange:ivory;leg.knee.material=s.affected?orange:jointMat;leg.ankle.material=s.affected?orange:ivory;
      const arm=arms[side],shoulder=h.clone().add(V(sign*.205+lean*.8,.405,0));
      let elbow,hand;
      if(c.cane&&p.cane.side===side){
        hand=V(p.cane.x,p.cane.y+.77,p.cane.z-.01);
-       const armKnee=kneeBetween(shoulder.toArray(),hand.toArray(),.29,.28);
-       elbow=V(...armKnee);elbow.z+=.02;
+       elbow=V(...caneElbowBetween(shoulder.toArray(),hand.toArray()));
      }else{
        const amp=s.affected?.035:.095,swing=Math.sin(p.phase+(side==='right'?Math.PI:0))*amp;
        elbow=shoulder.clone().add(V(sign*.012,-.265,swing));

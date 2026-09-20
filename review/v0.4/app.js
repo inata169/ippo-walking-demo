@@ -153,7 +153,7 @@ function frame(t){
 }
 export async function start(){
   buildControls();bind();sync();
-  const {createScene}=await import('./scene.js');scene=createScene($('world'),state.config);draw();
+  const {createScene}=await import('./scene.js?v=0.4.0-phase1-fix1');scene=createScene($('world'),state.config);draw();
   ready=true;$('play').disabled=false;$('step').disabled=false;
   document.querySelectorAll('[data-observation-phase]').forEach(button=>{button.disabled=false;});
   scene.controls.addEventListener('start',()=>document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed','false')));

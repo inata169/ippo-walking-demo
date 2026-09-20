@@ -6,10 +6,11 @@ const frac=n=>n-Math.floor(n);
 const envelope=t=>Math.sin(Math.PI*t)**2;
 export function samplePose(input,cycles) {
   const c=normalize(input),amount=c.level/3,value=id=>c.mode==='detail'?c.detail[id]/100:(c.feature===id?amount:0);
-  const stride=strideFor(c),distance=cycles*stride,sign=c.side==='right'?1:-1;
+  // The avatar faces +Z: anatomical right is -X and anatomical left is +X.
+  const stride=strideFor(c),distance=cycles*stride,sign=c.side==='right'?-1:1;
   const legs={};
   for (const side of ['left','right']) {
-    const affected=side===c.side,sgn=side==='right'?1:-1,offset=affected?0:0.5;
+    const affected=side===c.side,sgn=side==='right'?-1:1,offset=affected?0:0.5;
     const t=cycles+offset,phase=frac(t),stance=P.stance-(affected?P.supportReduction*value('reducedSupport'):0);
     const contact=phase<stance,u=contact?phase/stance:(phase-stance)/(1-stance);
     // Planted feet stay at a fixed WORLD position for the entire stance.
@@ -36,13 +37,13 @@ export function samplePose(input,cycles) {
   // Keep both fixed-length leg chains reachable; record the limitation.
   let cap=Infinity;
   for(const side of ['left','right']) {
-    const s=side==='right'?1:-1,l=legs[side],dx=hip.x+s*0.105*Math.cos(pelvicRoll)-l.x,dz=hip.z-l.z;
+    const s=side==='right'?-1:1,l=legs[side],dx=hip.x+s*0.105*Math.cos(pelvicRoll)-l.x,dz=hip.z-l.z;
     cap=Math.min(cap,l.y+Math.sqrt(Math.max(0,(2*P.legLength-0.00001)**2-dx*dx-dz*dz))-s*0.105*Math.sin(pelvicRoll));
   }
   const constrained=hip.y>cap;
   hip.y=Math.min(hip.y,cap);
   for(const side of ['left','right']) {
-    const s=side==='right'?1:-1,l=legs[side];
+    const s=side==='right'?-1:1,l=legs[side];
     l.hip=[hip.x+s*0.105*Math.cos(pelvicRoll),hip.y+s*0.105*Math.sin(pelvicRoll),hip.z];
     const bendSign=l.affected&&l.contact&&kneeAngle<0?-1:1;
     l.knee=kneeBetween(l.hip,[l.x,l.y,l.z],P.legLength,P.legLength,bendSign);
@@ -61,4 +62,10 @@ export function kneeBetween(hip,ankle,l1=0.46,l2=0.46,bendSign=1) {
   let bend=[-dir[0]*dir[2],-dir[1]*dir[2],1-dir[2]*dir[2]],bn=Math.hypot(...bend);
   if(bn<0.001){bend=[0,1,0];bn=1;}
   return hip.map((v,i)=>v+dir[i]*along+bend[i]/bn*h*bendSign);
+}
+
+export function caneElbowBetween(shoulder,hand) {
+  // A cane-holding elbow flexes posteriorly (-Z) instead of using the knee's
+  // forward-bending solution.
+  return kneeBetween(shoulder,hand,0.29,0.28,-1);
 }
