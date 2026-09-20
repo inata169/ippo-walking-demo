@@ -1,0 +1,1 @@
+{"name":"ippo-review-v04","private":true,"type":"module","scripts":{"test":"node tests.mjs"}}
