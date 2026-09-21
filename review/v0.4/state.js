@@ -1,4 +1,4 @@
-import {DEFAULT,normalize,fromPreset} from './patterns.js';
+import {DEFAULT,normalize,fromPreset} from './patterns.js?v=0.4.1-gait';
 export function createState() {return {config:normalize(DEFAULT),cycles:0,running:false,slow:false,a:null,b:null,viewingA:false,stepTarget:null,observationPhase:null};}
 export function changeConfig(s,patch) {
   s.running=false;s.stepTarget=null;

@@ -1,5 +1,5 @@
-import {PARAMETERS as P, normalize,strideFor} from './patterns.js';
-import {supportFor} from './support.js';
+import {PARAMETERS as P, normalize,strideFor} from './patterns.js?v=0.4.1-gait';
+import {supportFor} from './support.js?v=0.4.1-gait';
 export const groundAt=()=>0;
 const smooth=t=>t*t*(3-2*t);
 const frac=n=>n-Math.floor(n);

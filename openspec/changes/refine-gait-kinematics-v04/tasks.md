@@ -5,6 +5,18 @@
 - [x] 接地時間表示と設定に追従する場面選択を追加
 - [x] 既存テストと不具合に対応した数値検証
 - [x] 文献・限界・変更履歴・現在地を更新
-- [ ] pushとブラウザーでの描画・操作確認
+- [x] mainへ反映し、更新ページの配信を確認
+- [x] ブラウザーで詳細画面・スライダー・A/B復元を確認
+- [ ] WebGL描画で歩行アニメーションを目視確認（検証環境でWebGL無効のため未完了）
 
 OpenSpec CLIはこの環境に未導入。既存リポジトリのproposal/design/specs/tasks構造を使用し、CLI validateは未実施。
+
+
+## 検証結果
+
+- `node review/v0.4/tests.mjs`：既存64姿勢、段階調整、場面追従、10,010サンプルの脚長・接地・床貫通・連続性がPASS。
+- Three.jsのbuildAvatar/update：左右・5強度・8局面の80姿勢で、全オブジェクトの変換行列が有限。WebGLなしで実施。
+- `git diff --check`：PASS。
+- Cloud Browser / Chrome、1363×936：v0.4更新ページと有意なDOMを確認。詳細調整→膝100→A保存→膝0→A復元で100に戻ることを確認。
+- 画面・console：旧版・更新版とも `Error creating WebGL context`、`GL_RENDERER = Disabled`。ローカルURLは `ERR_BLOCKED_BY_CLIENT`。3D画面、再生・場面ボタン、モバイル描画は未検証。動作確認済みと扱わない。
+- 根本原因の数値回帰とUIまで確認済み。ユーザー環境で横からの動画・強い複合条件の最終見た目確認が残る。

@@ -1,7 +1,7 @@
-import {FEATURES,LEVELS,DETAIL_FIELDS,normalizeDetail,strideFor,periodFor,featureOf} from './patterns.js';
-import {createState,changeConfig,saveA,toggleA,enterDetail,changeDetail} from './state.js';
-import {encodeSettings,decodeSettings} from './settings.js';
-import {OBSERVATION_PHASES,cycleAtPhase} from './phases.js';
+import {FEATURES,LEVELS,DETAIL_FIELDS,normalizeDetail,strideFor,periodFor,featureOf} from './patterns.js?v=0.4.1-gait';
+import {createState,changeConfig,saveA,toggleA,enterDetail,changeDetail} from './state.js?v=0.4.1-gait';
+import {encodeSettings,decodeSettings} from './settings.js?v=0.4.1-gait';
+import {OBSERVATION_PHASES,cycleAtPhase} from './phases.js?v=0.4.1-gait';
 const $=id=>document.getElementById(id),state=createState();
 let scene,ready=false,frameId=null,lastTime=0,lastUI=0,stage='preset',detailInitialized=false;
 const fields=new Map();
