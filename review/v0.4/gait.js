@@ -1,7 +1,7 @@
-import {PARAMETERS as P, normalize,strideFor} from './patterns.js?v=0.4.1-gait';
-import {supportFor} from './support.js?v=0.4.1-gait';
+import {PARAMETERS as P, normalize,strideFor} from './patterns.js?v=0.4.2-smooth';
+import {supportFor} from './support.js?v=0.4.2-smooth';
 export const groundAt=()=>0;
-const smooth=t=>t*t*(3-2*t);
+const smooth=t=>t*t*t*(10+t*(-15+6*t));
 const frac=n=>n-Math.floor(n);
 const envelope=t=>Math.sin(Math.PI*t)**2;
 const rad=degrees=>degrees*Math.PI/180;
@@ -15,7 +15,9 @@ function curve(u,points) {
   return points.at(-1)[1];
 }
 // Conservative bounds enclosing the shoe, toe and sole used by scene.js.
-export const soleDepth=(pitch,roll)=>0.063+0.203*Math.abs(Math.sin(pitch))+0.075*Math.abs(Math.sin(roll));
+// Smooth, conservative absolute value: avoids an ankle-velocity cusp at flat foot.
+const softAbs=x=>Math.sqrt(x*x+0.0004);
+export const soleDepth=(pitch,roll)=>0.063+0.203*softAbs(Math.sin(pitch))+0.075*softAbs(Math.sin(roll));
 export function samplePose(input,cycles) {
   const c=normalize(input),amount=c.level/3,value=id=>c.mode==='detail'?c.detail[id]/100:(c.feature===id?amount:0);
   // Facing +Z: anatomical right is -X.
@@ -33,7 +35,12 @@ export function samplePose(input,cycles) {
     const lift=(0.065-difficulty*0.057)*e;
     const x=sgn*0.12+(affected?value('circumduction')*P.lateralSwing*e*sgn:0);
     const roll=affected&&c.mode==='detail'?-sgn*c.detail.footRoll/100*0.22:0;
-    const y=soleDepth(pitch,roll)+0.007+lift;
+    const floorHeight=soleDepth(pitch,roll)+0.007+lift;
+    // In swing, the ankle follows a single arch, rather than dipping whenever
+    // the rotating shoe passes through horizontal. Blend conservatively above
+    // the shoe-clearance bound without a hard max or a touchdown discontinuity.
+    const archHeight=blend(soleDepth(0.28,roll),soleDepth(-0.16,roll),u)+0.007+lift-difficulty*0.055*e;
+    const y=contact?floorHeight:(archHeight+floorHeight+Math.hypot(archHeight-floorHeight,0.004*e))/2;
     const baseline=rad(curve(u,[[0,10],[0.16,18],[0.5,3],[0.72,5],[1,35]]));
     const singleStart=timing.opposite-timing.oppositeOffset,singleEnd=1-timing.oppositeOffset;
     const hyperWindow=affected&&phase>singleStart&&phase<singleEnd?envelope((phase-singleStart)/(singleEnd-singleStart)):0;
@@ -46,14 +53,24 @@ export function samplePose(input,cycles) {
   const pelvicPitch=rad(6)+rad(1)*Math.cos(cycles*Math.PI*4);
   const forwardLean=rad(4)+rad(1.5)*Math.cos(cycles*Math.PI*4);
   const support=supportFor(legs);
-  const hip={x:0.025*(support.left-support.right),y:0,z:distance};
+  // Pelvic sway is continuous; support bars are not a physical position solver.
+  const hip={x:sign*0.025*Math.cos(2*Math.PI*(cycles-timing.affected/2)),y:0,z:distance};
   const hipOffset=side=>{const s=side==='right'?-1:1;return [s*0.105*Math.cos(pelvicRoll)*Math.cos(pelvicYaw),s*0.105*Math.sin(pelvicRoll),-s*0.105*Math.sin(pelvicYaw)];};
   const heightFor=(l,length)=>{
     const o=hipOffset(l.side),dx=hip.x+o[0]-l.x,dz=hip.z+o[2]-l.z;
     return l.y+Math.sqrt(Math.max(0,length*length-dx*dx-dz*dz))-o[1];
   };
-  // Always solve the same baseline chain, even at amount=0: no on/off jump.
-  hip.y=['left','right'].reduce((sum,side)=>sum+support[side]*heightFor(legs[side],2*P.legLength*Math.cos(legs[side].targetKnee/2)),0);
+  // A smooth pelvis path spans both support phases. Do not average two
+  // incompatible leg heights using the rapidly changing support display.
+  hip.y=0.978+0.010*Math.cos(4*Math.PI*(cycles-0.31));
+  const singleStart=timing.opposite-timing.oppositeOffset,singleEnd=1-timing.oppositeOffset;
+  const hyperWindow=a.phase>singleStart&&a.phase<singleEnd?envelope((a.phase-singleStart)/(singleEnd-singleStart)):0;
+  if(a.contact&&hyperWindow>0){
+    const o=hipOffset(c.side),length=Math.hypot(hip.x+o[0]-a.x,hip.y+o[1]-a.y,hip.z+o[2]-a.z);
+    const baselineAngle=2*Math.acos(Math.min(1,length/(2*P.legLength)));
+    a.targetKnee=baselineAngle-(baselineAngle+P.hyperextension)*value('kneeHyperextension')*hyperWindow;
+    hip.y=heightFor(a,2*P.legLength*Math.cos(a.targetKnee/2));
+  }
   // Lift a swinging ankle only when needed to keep the support-leg target reachable.
   // This geometric compensation is reported, not interpreted as muscle behavior.
   const reachLength=l=>2*P.legLength*(l.contact?1:Math.cos(rad(8)/2));

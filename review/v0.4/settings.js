@@ -1,4 +1,4 @@
-import {normalize,DETAIL_FIELDS,FEATURES} from './patterns.js?v=0.4.1-gait';
+import {normalize,DETAIL_FIELDS,FEATURES} from './patterns.js?v=0.4.2-smooth';
 const FORMAT='ippo-walking-settings';
 const fail=()=>{throw new Error('Ver.0.3で保存した設定JSONを選んでください。');};
 const object=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);

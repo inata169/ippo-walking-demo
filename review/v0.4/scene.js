@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from '../../assets/OrbitControls.js';
-import {samplePose,groundAt,caneElbowBetween} from './gait.js?v=0.4.1-gait';
+import {samplePose,groundAt,caneElbowBetween} from './gait.js?v=0.4.2-smooth';
 const V=(x,y,z)=>new THREE.Vector3(x,y,z),up=V(0,1,0);
 const material=(color,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness});
 export function buildAvatar(scene){

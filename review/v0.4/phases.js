@@ -1,4 +1,4 @@
-import {timingFor} from './gait.js?v=0.4.1-gait';
+import {timingFor} from './gait.js?v=0.4.2-smooth';
 // Illustrative observation positions within the affected-side gait cycle.
 // These are not detected clinical gait events or measured timings.
 export const OBSERVATION_PHASES = Object.freeze([

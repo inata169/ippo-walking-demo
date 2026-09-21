@@ -106,3 +106,25 @@ for(const side of ['left','right'])for(const amount of [0,10,20,50,100]){
   }
 }
 console.log(`PASS: graded controls, adaptive phases, ${geometrySamples} geometry samples; maximum knee movement per 0.1% cycle: ${(maxKneeStep*1000).toFixed(1)} mm.`);
+
+// Neutral walking must not jerk at load acceptance (10% / 60%), or when
+// the swinging foot crosses horizontal. Finite differences are per cycle,
+// not clinical acceleration thresholds. Test finer steps to catch IK cusps.
+const neutral={mode:'detail',detail:{}};
+let peakHipSpeed=0,peakHipAcceleration=0,peakKneeAcceleration=0;
+for(const dt of [0.0002,0.0001])for(let i=0;i<2000;i++){
+  const t=i/2000,a=samplePose(neutral,t-dt),p=samplePose(neutral,t),b=samplePose(neutral,t+dt);
+  for(const side of ['left','right']){
+    const acceleration=Math.hypot(...p[side].knee.map((v,j)=>(a[side].knee[j]-2*v+b[side].knee[j])/(dt*dt)));
+    peakKneeAcceleration=Math.max(peakKneeAcceleration,acceleration);
+    assert.ok(acceleration<100,'neutral knee trajectory must not develop a velocity cusp');
+  }
+  if((t>=.05&&t<=.15)||(t>=.55&&t<=.65)){
+    const speed=Math.abs((b.hip.y-a.hip.y)/(2*dt));
+    const acceleration=Math.abs((b.hip.y-2*p.hip.y+a.hip.y)/(dt*dt));
+    peakHipSpeed=Math.max(peakHipSpeed,speed);peakHipAcceleration=Math.max(peakHipAcceleration,acceleration);
+    assert.ok(speed<.15,'load acceptance must not abruptly drop the pelvis');
+    assert.ok(acceleration<3,'load acceptance pelvis acceleration must remain gradual');
+  }
+}
+console.log('PASS: neutral gait continuity at two step sizes', {peakHipSpeed,peakHipAcceleration,peakKneeAcceleration});

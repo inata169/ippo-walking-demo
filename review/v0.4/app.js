@@ -1,7 +1,7 @@
-import {FEATURES,LEVELS,DETAIL_FIELDS,normalizeDetail,strideFor,periodFor,featureOf} from './patterns.js?v=0.4.1-gait';
-import {createState,changeConfig,saveA,toggleA,enterDetail,changeDetail} from './state.js?v=0.4.1-gait';
-import {encodeSettings,decodeSettings} from './settings.js?v=0.4.1-gait';
-import {OBSERVATION_PHASES,cycleAtPhase} from './phases.js?v=0.4.1-gait';
+import {FEATURES,LEVELS,DETAIL_FIELDS,normalizeDetail,strideFor,periodFor,featureOf} from './patterns.js?v=0.4.2-smooth';
+import {createState,changeConfig,saveA,toggleA,enterDetail,changeDetail} from './state.js?v=0.4.2-smooth';
+import {encodeSettings,decodeSettings} from './settings.js?v=0.4.2-smooth';
+import {OBSERVATION_PHASES,cycleAtPhase} from './phases.js?v=0.4.2-smooth';
 const $=id=>document.getElementById(id),state=createState();
 let scene,ready=false,frameId=null,lastTime=0,lastUI=0,stage='preset',detailInitialized=false;
 const fields=new Map();
@@ -157,7 +157,7 @@ function frame(t){
 }
 export async function start(){
   buildControls();bind();sync();
-  const {createScene}=await import('./scene.js?v=0.4.1-gait');scene=createScene($('world'),state.config);draw();
+  const {createScene}=await import('./scene.js?v=0.4.2-smooth');scene=createScene($('world'),state.config);draw();
   ready=true;$('play').disabled=false;$('step').disabled=false;
   document.querySelectorAll('[data-observation-phase]').forEach(button=>{button.disabled=false;});
   scene.controls.addEventListener('start',()=>document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed','false')));

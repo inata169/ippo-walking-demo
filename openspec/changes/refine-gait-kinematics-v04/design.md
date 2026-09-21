@@ -18,3 +18,8 @@ Kobayashi et al. (2016), https://pubmed.ncbi.nlm.nih.gov/27136122/ は立脚期�
 ## 検証
 
 既存テストに、左右・0/10/20/50/100の段階性、飛行期なし、脚長、床貫通なし、接地中の滑りなし、周期境界連続性を追加。ブラウザーでは横から膝・つま先、正面から支持時間バー、場面選択、A/Bを確認する。ローカル接続がブラウザー環境で拒否された場合、数値確認後にpushし、配信されたv0.4で画面確認を行う。
+
+
+## v0.4.2 follow-up: neutral gait continuity
+
+User-observed jerks at 10%/60% traced to support-weighted pelvis heights and shoe-depth absolute-value cusps. Replace the neutral pelvis position with periodic vertical/lateral trajectories, use quintic interpolation, regularize the conservative sole bound with sqrt(x²+0.0004), and transport the swing ankle on an arch with a smooth clearance bound. The smoothing width vanishes at contact endpoints to avoid a contact jump. Hyperextension is computed relative to the new baseline leg angle, rather than activating a different pelvis solver at nonzero amounts. This remains kinematics, not a contact-force or gravity solver.

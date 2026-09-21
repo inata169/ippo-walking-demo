@@ -28,3 +28,15 @@ Phase selection SHALL follow the configured affected stance duration while A/B c
 #### Scenario: Changed stance duration
 - WHEN the user selects foot off after shortening affected stance
 - THEN playback pauses at the updated transition into swing.
+
+
+### Requirement: Smooth neutral load acceptance
+The neutral gait SHALL use continuous pelvis and ankle trajectories without a support-weight-driven drop or an absolute-value velocity cusp. Fixed limb lengths and ground clearance SHALL be preserved.
+
+#### Scenario: Neutral walking around 10% and 60%
+- WHEN every feature amount is zero
+- THEN the pelvis descends and rises gradually through load acceptance, and knees move without sudden changes of velocity, including the swing-foot horizontal crossing.
+
+#### Scenario: Regression measurement
+- WHEN trajectories are differentiated at two decreasing time steps
+- THEN neutral knee acceleration remains bounded across the full cycle and pelvis speed/acceleration remain bounded around both load-acceptance windows.
