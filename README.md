@@ -64,7 +64,7 @@ Ver.0.4では、正面から見た人体の左右表示と、杖を持つ側の�
 - [プロジェクトの目的と現在地](./docs/PROJECT_STATUS.md)
 - [リハビリ専門職向け確認ガイド](./docs/PROFESSIONAL_REVIEW.md)
 - [変更履歴](./CHANGELOG.md)
-- [Ver.0.3の開発・拡張方法](./review/v0.3/DEVELOPMENT.md)
+- [Ver.0.4の開発・拡張方法](./review/v0.4/DEVELOPMENT.md)
 
 ## 旧レビュー版
 
