@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from '../../assets/OrbitControls.js';
-import {samplePose,groundAt,caneElbowBetween} from './gait.js?v=0.4.0-phase1-fix1';
+import {samplePose,groundAt,caneElbowBetween} from './gait.js?v=0.4.1-gait';
 const V=(x,y,z)=>new THREE.Vector3(x,y,z),up=V(0,1,0);
 const material=(color,roughness=.8)=>new THREE.MeshStandardMaterial({color,roughness});
 export function buildAvatar(scene){
@@ -27,16 +27,18 @@ export function buildAvatar(scene){
  const cane={shaft:link(.012,.014,metal),handle:link(.022,.022,metal),tip:sphere(.023,metal)};
  function update(p,c){
    const h=V(p.hip.x,p.hip.y,p.hip.z),lean=p.lean;
-   pelvis.position.copy(h);pelvis.rotation.z=p.pelvicRoll;
-   torso.position.copy(h).add(V(lean,.255,0));torso.rotation.z=-lean;
-   head.position.copy(h).add(V(lean*2, .625, .016));head.rotation.z=-lean*.4;
+   pelvis.position.copy(h);pelvis.rotation.set(p.pelvicPitch,p.pelvicYaw,p.pelvicRoll);
+   const bodyRotation=new THREE.Euler(p.forwardLean,-p.pelvicYaw*.5,-lean);
+   const bodyPoint=(x,y,z=0)=>V(x,y,z).applyEuler(bodyRotation).add(h);
+   torso.position.copy(bodyPoint(0,.255));torso.rotation.copy(bodyRotation);
+   head.position.copy(bodyPoint(0,.625,.016));head.rotation.set(0,-p.pelvicYaw*.5,-lean*.4);
    nose.position.copy(head.position).add(V(0,-.01,.103));
-   orient(neck,h.clone().add(V(lean*1.5,.445,0)),h.clone().add(V(lean*1.8,.51,0)));
+   orient(neck,bodyPoint(0,.445),bodyPoint(0,.51));
    for(const side of ['right','left']){
      const s=p[side],sign=side==='right'?-1:1,leg=legs[side],a=V(s.x,s.y,s.z),hip=V(...s.hip),k=V(...s.knee);
      orient(leg.thigh,hip,k);orient(leg.shin,k,a);leg.knee.position.copy(k);leg.ankle.position.copy(a);leg.foot.position.copy(a);leg.foot.rotation.set(s.pitch,0,s.roll);
      leg.shin.material=s.affected?orange:ivory;leg.knee.material=s.affected?orange:jointMat;leg.ankle.material=s.affected?orange:ivory;
-     const arm=arms[side],shoulder=h.clone().add(V(sign*.205+lean*.8,.405,0));
+     const arm=arms[side],shoulder=bodyPoint(sign*.205,.405);
      let elbow,hand;
      if(c.cane&&p.cane.side===side){
        hand=V(p.cane.x,p.cane.y+.77,p.cane.z-.01);

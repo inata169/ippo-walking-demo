@@ -71,3 +71,9 @@ Ver.0.4では、正面から見た人体の左右表示と、杖を持つ側の�
 Ver.0.2は `review/v0.2/` に残しています。
 
 手元で確認する場合は、Windowsでは `start-review.bat` をダブルクリックします。その他の環境では、Python 3で `python start-review.py` を実行してください。構成と追加方法は [`review/v0.2/DEVELOPMENT.md`](./review/v0.2/DEVELOPMENT.md) に記載しています。
+
+## 2026-09-21：v0.4.1 歩行調整
+
+軽い体幹前傾と骨盤・足部の周期運動、膝の連続調整、支持時間の左右差、つま先の見え方を修正しました。接地時間バーとモデル角度表示を追加し、場面停止は設定した支持時間に追従します。以前の「固定位置」は初期設定時の位置を意味します。
+
+[文献・モデル係数・限界・確認方法](docs/GAIT_MODEL_V04.md)をご覧ください。OpenSpecは`openspec/changes/refine-gait-kinematics-v04/`に記録しています。

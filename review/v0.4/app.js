@@ -17,9 +17,13 @@ function updateUI(p){
   $('phase').value=n;$('phase-value').textContent=n+'%';
   $('phase-label').textContent=p.support.label;$('distance').textContent=p.distance.toFixed(1)+' / 20 m';
   $('constraint-note').hidden=!p.constrained;
+  const a=p[state.config.side];
+  $('gait-readout').textContent='モデル内の姿勢：膝 '+(a.kneeAngle*180/Math.PI).toFixed(1)+'°（＋曲がる／−反る）・足先 '+(a.pitch*180/Math.PI).toFixed(1)+'°（＋下向き）';
   for(const side of ['left','right']){
     $(side+'-bar').style.transform='scaleX('+p.support[side]+')';
     $(side+'-contact').textContent=p[side].contact?'接地中':'振り出し';
+    $(side+'-duration').textContent=(side==='left'?'左':'右')+'足：接地 '+Math.round(p[side].stance*100)+'% ／ 振り出し '+Math.round((1-p[side].stance)*100)+'%';
+    $(side+'-timeline').style.width=(p[side].stance*100)+'%';
   }
   $('cane-contact').textContent=state.config.cane?'杖：'+(p.cane.contact?'接地中':'移動中')+'（'+(p.cane.side==='left'?'左':'右')+'手）':'杖：なし';
 }
@@ -45,7 +49,7 @@ function sync(){
   $('compare-label').textContent=state.viewingA?'保存した条件Aを表示中です。':state.a?'条件Aを保存済み。現在の条件Bと比較できます。':'条件Aは未保存です。';
   playback();syncObservationPhase();draw();
 }
-function change(patch){changeConfig(state,patch);sync();}
+function change(patch){changeConfig(state,patch);state.observationPhase=null;sync();}
 function choosePreset(patch){
   if(detailInitialized&&!window.confirm('詳細調整を初期化して、選び直しますか？'))return;
   detailInitialized=false;
@@ -54,7 +58,7 @@ function choosePreset(patch){
 function setPhase(n,observationPhase=null){pause();state.observationPhase=observationPhase;state.cycles=Math.floor(state.cycles)+Math.max(0,Math.min(99.999999,n))/100;syncObservationPhase();draw();}
 function selectObservationPhase(id){
   const phase=OBSERVATION_PHASES.find(item=>item.id===id);
-  state.cycles=cycleAtPhase(state.cycles,id);state.observationPhase=id;pause();syncObservationPhase();draw();
+  state.cycles=cycleAtPhase(state.cycles,id,state.config);state.observationPhase=id;pause();syncObservationPhase();draw();
   announce(phase.label+'の場面で停止しました。');
 }
 function reset(){pause();state.cycles=0;state.observationPhase=null;syncObservationPhase();draw();announce('出発点へ戻りました。');}
@@ -79,7 +83,7 @@ function buildControls(){
     const row=document.createElement('div');row.className='slider';
     const input=document.createElement('input');input.type='range';input.id=label.htmlFor;
     Object.assign(input,{min:f.min,max:f.max,step:f.step});
-    const edit=n=>{changeDetail(state,f.id,n);detailInitialized=true;sync();};
+    const edit=n=>{changeDetail(state,f.id,n);state.observationPhase=null;detailInitialized=true;sync();};
     input.oninput=()=>edit(Number(input.value));
     for(const sign of [-1,1]){
       const button=document.createElement('button');button.textContent=sign<0?'−':'＋';
@@ -113,7 +117,7 @@ function bind(){
   $('zoom-in').onclick=()=>scene?.zoom(0.84);$('zoom-out').onclick=()=>scene?.zoom(1.19);
   $('show-support').onchange=e=>{$('support').hidden=!e.target.checked;};
   $('save-a').onclick=()=>{pause();saveA(state);sync();};
-  $('toggle-a').onclick=()=>{toggleA(state);stage=state.config.mode;detailInitialized=stage==='detail';sync();};
+  $('toggle-a').onclick=()=>{toggleA(state);stage=state.config.mode;detailInitialized=stage==='detail';state.observationPhase=null;sync();};
   $('world').onkeydown=e=>{if(e.code==='Space'){e.preventDefault();$('play').click();}if(e.code==='Escape')pause();};
   $('export-settings').onclick=()=>{
     pause();const blob=new Blob([encodeSettings(state.config,state.cycles)],{type:'application/json'});
@@ -153,7 +157,7 @@ function frame(t){
 }
 export async function start(){
   buildControls();bind();sync();
-  const {createScene}=await import('./scene.js?v=0.4.0-phase1-fix1');scene=createScene($('world'),state.config);draw();
+  const {createScene}=await import('./scene.js?v=0.4.1-gait');scene=createScene($('world'),state.config);draw();
   ready=true;$('play').disabled=false;$('step').disabled=false;
   document.querySelectorAll('[data-observation-phase]').forEach(button=>{button.disabled=false;});
   scene.controls.addEventListener('start',()=>document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed','false')));

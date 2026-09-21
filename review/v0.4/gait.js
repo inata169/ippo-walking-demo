@@ -4,56 +4,84 @@ export const groundAt=()=>0;
 const smooth=t=>t*t*(3-2*t);
 const frac=n=>n-Math.floor(n);
 const envelope=t=>Math.sin(Math.PI*t)**2;
+const rad=degrees=>degrees*Math.PI/180;
+const blend=(a,b,t)=>a+(b-a)*smooth(Math.max(0,Math.min(1,t)));
+export function timingFor(input) {
+  const c=normalize(input),q=c.mode==='detail'?c.detail.reducedSupport/100:(c.feature==='reducedSupport'?c.level/3:0);
+  return {affected:P.stance-P.supportReduction*q,opposite:P.stance+P.supportReduction*q,oppositeOffset:0.5+P.supportReduction*q};
+}
+function curve(u,points) {
+  for(let i=1;i<points.length;i++)if(u<=points[i][0])return blend(points[i-1][1],points[i][1],(u-points[i-1][0])/(points[i][0]-points[i-1][0]));
+  return points.at(-1)[1];
+}
+// Conservative bounds enclosing the shoe, toe and sole used by scene.js.
+export const soleDepth=(pitch,roll)=>0.063+0.203*Math.abs(Math.sin(pitch))+0.075*Math.abs(Math.sin(roll));
 export function samplePose(input,cycles) {
   const c=normalize(input),amount=c.level/3,value=id=>c.mode==='detail'?c.detail[id]/100:(c.feature===id?amount:0);
-  // The avatar faces +Z: anatomical right is -X and anatomical left is +X.
-  const stride=strideFor(c),distance=cycles*stride,sign=c.side==='right'?-1:1;
+  // Facing +Z: anatomical right is -X.
+  const stride=strideFor(c),distance=cycles*stride,sign=c.side==='right'?-1:1,timing=timingFor(c);
   const legs={};
   for (const side of ['left','right']) {
-    const affected=side===c.side,sgn=side==='right'?-1:1,offset=affected?0:0.5;
-    const t=cycles+offset,phase=frac(t),stance=P.stance-(affected?P.supportReduction*value('reducedSupport'):0);
+    const affected=side===c.side,sgn=side==='right'?-1:1,offset=affected?0:timing.oppositeOffset;
+    const t=cycles+offset,phase=frac(t),stance=affected?timing.affected:timing.opposite;
     const contact=phase<stance,u=contact?phase/stance:(phase-stance)/(1-stance);
-    // Planted feet stay at a fixed WORLD position for the entire stance.
     const z=stride*(Math.floor(t)-offset+stance/2+(contact?0:smooth(u)));
-    const e=contact?0:envelope(u),pitch=affected?value('toeClearance')*P.toeDrop*e:0;
-    const lift=(0.10-(affected?value('toeClearance')*0.04:0))*e;
+    const e=contact?0:envelope(u),difficulty=affected?value('toeClearance'):0;
+    // Foot rollover is stylized about the ankle; not a pressure/rocker solver.
+    const basePitch=contact?curve(u,[[0,-0.16],[0.16,0],[0.72,0],[1,0.28]]):curve(u,[[0,0.28],[0.35,-0.06],[0.70,-0.06],[1,-0.16]]);
+    const pitch=basePitch+difficulty*P.toeDrop*e;
+    const lift=(0.065-difficulty*0.057)*e;
     const x=sgn*0.12+(affected?value('circumduction')*P.lateralSwing*e*sgn:0);
     const roll=affected&&c.mode==='detail'?-sgn*c.detail.footRoll/100*0.22:0;
-    // Geometric sole clearance only, not pressure/contact-area simulation.
-    const y=Math.max(P.footHeight+lift,0.063+0.203*Math.abs(Math.sin(pitch))+0.075*Math.abs(Math.sin(roll)));
-    legs[side]={side,affected,contact,phase,stance,u,x,y,z,pitch,roll,lift};
+    const y=soleDepth(pitch,roll)+0.007+lift;
+    const baseline=rad(curve(u,[[0,10],[0.16,18],[0.5,3],[0.72,5],[1,35]]));
+    const singleStart=timing.opposite-timing.oppositeOffset,singleEnd=1-timing.oppositeOffset;
+    const hyperWindow=affected&&phase>singleStart&&phase<singleEnd?envelope((phase-singleStart)/(singleEnd-singleStart)):0;
+    const targetKnee=baseline-(affected?value('kneeHyperextension')*(rad(3)+P.hyperextension)*hyperWindow:0);
+    legs[side]={side,affected,contact,phase,stance,u,x,y,z,pitch,roll,lift,targetKnee};
   }
-  const a=legs[c.side],e=a.contact?0:envelope(a.u),pelvicRoll=sign*P.pelvicRoll*value('hipHiking')*e;
-  const hip={x:0,y:0.85+0.015*Math.cos(cycles*Math.PI*4),z:distance};
-  const desiredBend=0.22-(0.22+P.hyperextension)*value('kneeHyperextension');
-  const hyperBlend=a.contact?envelope(a.u)**3:0;
-  const kneeAngle=0.22+(desiredBend-0.22)*hyperBlend;
-  // Near mid stance extend the chain through zero into a signed bend.
-  if (value('kneeHyperextension')&&a.contact) {
-    const length=2*P.legLength*Math.cos(kneeAngle/2);
-    const target=a.y+Math.sqrt(Math.max(0,length*length-(hip.z-a.z)**2-(hip.x+sign*0.105-a.x)**2));
-    hip.y+=(target-hip.y)*Math.min(1,hyperBlend*4);
+  const a=legs[c.side],e=a.contact?0:envelope(a.u);
+  const pelvicYaw=sign*rad(4)*Math.cos(cycles*Math.PI*2);
+  const pelvicRoll=sign*(rad(1)*Math.sin(cycles*Math.PI*2)+P.pelvicRoll*value('hipHiking')*e);
+  const pelvicPitch=rad(6)+rad(1)*Math.cos(cycles*Math.PI*4);
+  const forwardLean=rad(4)+rad(1.5)*Math.cos(cycles*Math.PI*4);
+  const support=supportFor(legs);
+  const hip={x:0.025*(support.left-support.right),y:0,z:distance};
+  const hipOffset=side=>{const s=side==='right'?-1:1;return [s*0.105*Math.cos(pelvicRoll)*Math.cos(pelvicYaw),s*0.105*Math.sin(pelvicRoll),-s*0.105*Math.sin(pelvicYaw)];};
+  const heightFor=(l,length)=>{
+    const o=hipOffset(l.side),dx=hip.x+o[0]-l.x,dz=hip.z+o[2]-l.z;
+    return l.y+Math.sqrt(Math.max(0,length*length-dx*dx-dz*dz))-o[1];
+  };
+  // Always solve the same baseline chain, even at amount=0: no on/off jump.
+  hip.y=['left','right'].reduce((sum,side)=>sum+support[side]*heightFor(legs[side],2*P.legLength*Math.cos(legs[side].targetKnee/2)),0);
+  // Lift a swinging ankle only when needed to keep the support-leg target reachable.
+  // This geometric compensation is reported, not interpreted as muscle behavior.
+  const reachLength=l=>2*P.legLength*(l.contact?1:Math.cos(rad(8)/2));
+  const reachCap=Math.min(...Object.values(legs).map(l=>heightFor(l,reachLength(l))+(l.contact?0:0.20*envelope(l.u))));
+  const reachLimited=hip.y>reachCap+1e-8;
+  hip.y=Math.min(hip.y,reachCap);
+  let swingCompensated=false;
+  for(const l of Object.values(legs))if(!l.contact){
+    const required=hip.y-heightFor(l,reachLength(l));
+    if(required>0){l.y+=required;l.lift+=required;swingCompensated=true;}
   }
-  // Keep both fixed-length leg chains reachable; record the limitation.
-  let cap=Infinity;
-  for(const side of ['left','right']) {
-    const s=side==='right'?-1:1,l=legs[side],dx=hip.x+s*0.105*Math.cos(pelvicRoll)-l.x,dz=hip.z-l.z;
-    cap=Math.min(cap,l.y+Math.sqrt(Math.max(0,(2*P.legLength-0.00001)**2-dx*dx-dz*dz))-s*0.105*Math.sin(pelvicRoll));
-  }
-  const constrained=hip.y>cap;
+  const cap=Math.min(...Object.values(legs).map(l=>heightFor(l,2*P.legLength)));
+  const constrained=reachLimited||swingCompensated||hip.y>cap+1e-8;
   hip.y=Math.min(hip.y,cap);
   for(const side of ['left','right']) {
-    const s=side==='right'?-1:1,l=legs[side];
-    l.hip=[hip.x+s*0.105*Math.cos(pelvicRoll),hip.y+s*0.105*Math.sin(pelvicRoll),hip.z];
-    const bendSign=l.affected&&l.contact&&kneeAngle<0?-1:1;
+    const l=legs[side],o=hipOffset(side);
+    l.hip=[hip.x+o[0],hip.y+o[1],hip.z+o[2]];
+    const bendSign=l.affected&&l.contact&&l.targetKnee<0?-1:1;
     l.knee=kneeBetween(l.hip,[l.x,l.y,l.z],P.legLength,P.legLength,bendSign);
+    const length=Math.hypot(l.hip[0]-l.x,l.hip[1]-l.y,l.hip[2]-l.z);
+    l.kneeAngle=bendSign*2*Math.acos(Math.min(1,length/(2*P.legLength)));
+    l.soleClearance=l.y-soleDepth(l.pitch,l.roll);
   }
   const leanActive=(c.timing==='stance')===a.contact;
   const lean=sign*(c.direction==='affected'?1:-1)*P.trunkLean*value('trunkLean')*(leanActive?envelope(a.u):0);
   const caneSide=c.side==='right'?'left':'right';
-  const p={distance,hip,left:legs.left,right:legs.right,phase:cycles*Math.PI*2,pelvicRoll,lean,constrained,
+  return {distance,hip,left:legs.left,right:legs.right,phase:cycles*Math.PI*2,pelvicRoll,pelvicYaw,pelvicPitch,forwardLean,lean,constrained,support,
     cane:{x:-sign*0.38,y:a.contact?0:a.lift*0.75,z:a.z+0.09,contact:c.cane&&a.contact,side:caneSide}};
-  return {...p,support:supportFor(legs)};
 }
 export function kneeBetween(hip,ankle,l1=0.46,l2=0.46,bendSign=1) {
   const d=ankle.map((v,i)=>v-hip[i]),dist=Math.hypot(...d),safe=Math.max(0.0001,Math.min(dist,l1+l2));

@@ -1,3 +1,4 @@
+import {timingFor} from './gait.js';
 // Illustrative observation positions within the affected-side gait cycle.
 // These are not detected clinical gait events or measured timings.
 export const OBSERVATION_PHASES = Object.freeze([
@@ -13,8 +14,10 @@ export function phaseById(id) {
   return OBSERVATION_PHASES.find(phase=>phase.id===id)??null;
 }
 
-export function cycleAtPhase(cycles,id) {
+export function cycleAtPhase(cycles,id,config) {
   const phase=phaseById(id);
   if(!phase)throw new Error('未対応の観察場面です。');
-  return Math.floor(cycles)+phase.position;
+  const stance=config?timingFor(config).affected:0.62;
+  const positions={footContact:0,acceptWeight:stance*(0.10/0.62),midSupport:stance/2,footOff:stance,midSwing:stance+(1-stance)/2,nextContact:0.99};
+  return Math.floor(cycles)+positions[id];
 }

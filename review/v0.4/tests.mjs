@@ -66,3 +66,43 @@ for(const config of configurations)for(let i=0;i<16;i++){
 const faster=normalize({...s.config,detail:{...s.config.detail,cadence:80}});
 assert.equal(strideFor(faster),strideFor(s.config));assert.ok(periodFor(faster)<periodFor(s.config));
 console.log('PASS: preset -> detail, A/B independence, JSON round-trip/rejection, independent cadence, anatomical laterality, cane-elbow flexion, '+poses+' representative poses.');
+
+// Regressions for the reported controls: measure rendered joint geometry,
+// not only the intended coefficients.
+for(const side of ['left','right']){
+  let previousAngle=Infinity,previousClearance=Infinity,previousPitch=-Infinity,previousStance=Infinity;
+  for(const amount of [0,10,20,50,100]){
+    const detail=normalize({...DEFAULT,side,mode:'detail',detail:{kneeHyperextension:amount}});
+    const knee=samplePose(detail,.31)[side];
+    assert.ok(knee.kneeAngle<previousAngle-0.001,'knee must change across the full slider');previousAngle=knee.kneeAngle;
+    if(amount===10)assert.ok(knee.kneeAngle>0,'10 must not suddenly hyperextend');
+    const toe=samplePose({...detail,detail:{toeClearance:amount}},.81)[side];
+    assert.ok(toe.pitch>previousPitch,'toe angle must increase');previousPitch=toe.pitch;
+    assert.ok(toe.soleClearance<previousClearance,'sole clearance must decrease');previousClearance=toe.soleClearance;
+    const config={...detail,detail:{reducedSupport:amount}};
+    const pose=samplePose(config,.2);
+    assert.ok(pose[side].stance<previousStance);previousStance=pose[side].stance;
+    const off=cycleAtPhase(0,'footOff',config);
+    assert.ok(!samplePose(config,off)[side].contact,'foot off must follow configured stance');
+    assert.ok(samplePose(config,off-1e-6)[side].contact);
+  }
+}
+let geometrySamples=0,maxKneeStep=0;
+for(const side of ['left','right'])for(const amount of [0,10,20,50,100]){
+  const config=normalize({...DEFAULT,side,mode:'detail',detail:{kneeHyperextension:amount,toeClearance:amount,reducedSupport:amount,hipHiking:amount,footRoll:amount,stepLength:40}});
+  let previous=samplePose(config,-.001);
+  for(let i=0;i<=1000;i++){
+    const pose=samplePose(config,i/1000);geometrySamples++;
+    assert.ok(pose.left.contact||pose.right.contact,'walking must not develop a flight phase');
+    for(const s of ['left','right']){
+      const l=pose[s],before=previous[s];
+      for(const point of [l.hip,[l.x,l.y,l.z]])assert.ok(Math.abs(Math.hypot(...l.knee.map((v,j)=>v-point[j]))-P.legLength)<1e-6);
+      assert.ok(l.soleClearance>=-1e-8,'shoe must stay above ground');
+      const jump=Math.hypot(...l.knee.map((v,j)=>v-before.knee[j]));maxKneeStep=Math.max(maxKneeStep,jump);
+      assert.ok(jump<.035,'no discontinuous knee flip');
+      if(l.contact&&before.contact&&l.phase>before.phase){assert.ok(Math.abs(l.x-before.x)<1e-10);assert.ok(Math.abs(l.z-before.z)<1e-10);}
+    }
+    previous=pose;
+  }
+}
+console.log(`PASS: graded controls, adaptive phases, ${geometrySamples} geometry samples; maximum knee movement per 0.1% cycle: ${(maxKneeStep*1000).toFixed(1)} mm.`);

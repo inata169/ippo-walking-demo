@@ -7,3 +7,5 @@
 .phase-heading{margin-top:16px}.phase-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0}.phase-presets button{min-height:44px;padding:7px 9px;white-space:normal;font-size:.9rem}
 @media(min-width:851px){aside.panel{max-height:calc(100vh - 40px);overflow:auto;position:sticky;top:20px}}
 @media(max-width:540px){.phase-presets{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.stance-timing{margin-top:14px}.stance-timing p{margin:8px 0 4px}.duration-track{height:9px;background:#e4e9ef;border-radius:5px;overflow:hidden}.duration-track>div{height:100%;background:#476d98;width:62%}

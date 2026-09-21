@@ -10,7 +10,7 @@ export const FEATURES = [
 ];
 export const LEVELS = ['なし','小','中','大'];
 export const PARAMETERS = Object.freeze({stride:0.64, period:2.4, stance:0.62, footHeight:0.07, legLength:0.46,
-  toeDrop:0.22, lateralSwing:0.12, pelvicRoll:0.14, hyperextension:0.12, trunkLean:0.16, supportReduction:0.10});
+  toeDrop:0.50, lateralSwing:0.12, pelvicRoll:0.14, hyperextension:0.21, trunkLean:0.16, supportReduction:0.20});
 export const DEFAULT = Object.freeze({feature:'circumduction', level:2, side:'right', cane:true, ground:'flat', direction:'affected', timing:'stance'});
 export function normalize(input) {
   return {...DEFAULT, feature:FEATURES.some(f=>f.id===input.feature)?input.feature:DEFAULT.feature,
